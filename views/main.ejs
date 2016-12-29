@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><%= name %></title>
+        <link rel="stylesheet" type="text/css" href="/public/css/style.css">
+    </head>
+
+    <body>
+      <h1><%= name %></h1>
+
+      <div class="messages">
+          <% pins.forEach((pin) => { %>
+              <div class="pin">
+                  <img src="<%= pin.image %>"/>
+
+                  <div class="message">
+                      <div class="username">
+                          <%= pin.author %>
+                      </div>
+
+                      <div class="time">
+                          <%= dateformat(new Date(pin.ts), 'yyyy-mm-dd hh:MM') %>
+                      </div>
+
+                      <div class="score">
+                          <%= pin.score %>
+                      </div>
+
+                      <div class="content">
+                          <%= pin.content %>
+                      </div>
+
+                      <div class="permalink">
+                          <a href="https://<%= org %>.slack.com/archives/<% pin.channelName %>/p<%= pin.ts.replace('.', '') %>">Permalink</a>
+                      </div>
+                  </div>
+              </div>
+          <% }) %>
+      </div>
+
+      <p>Copyright &copy; <%= year %> Hunter</p>
+    </body>
+</html>

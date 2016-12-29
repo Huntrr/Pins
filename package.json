@@ -1,0 +1,30 @@
+{
+  "name": "pins",
+  "version": "1.0.0",
+  "private": true,
+  "description": "a bot for slack that handles pinning infinitely many messages",
+  "main": "bot.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Huntrr/Pins.git"
+  },
+  "author": "Hunter Lightman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Huntrr/Pins/issues"
+  },
+  "homepage": "https://github.com/Huntrr/Pins#readme",
+  "dependencies": {
+    "@slack/client": "^3.8.1",
+    "async": "^2.1.4",
+    "body-parser": "^1.15.2",
+    "crypto-js": "^3.1.8",
+    "dateformat": "^2.0.0",
+    "ejs": "^2.5.2",
+    "express": "^4.14.0",
+    "express-session": "^1.14.2",
+    "lodash": "^4.17.3",
+    "lowdb": "^0.14.0",
+    "marked": "^0.3.6"
+  }
+}
