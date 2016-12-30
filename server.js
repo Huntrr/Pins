@@ -5,9 +5,9 @@ const bodyParser = require('body-parser');
 const expressSession = require('express-session');
 const db = require('./models/db.js');
 
-db.clearTokens((err, res) => {
+/*db.clearTokens((err, res) => {
   if(err) console.error(err);
-});
+});*/
 
 /**
  * constants
