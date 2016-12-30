@@ -120,7 +120,7 @@ let self = {
       web.pins.list(id, function(err, data) {
         let items = data.items;
         if(items) {
-          items.filter(x => x.created_by != botId && x.type == 'message')
+          items.filter(x => /* x.created_by != botId && */ x.type == 'message')
           .forEach(function(item) {
             console.log(' - adding item with ts ', item.message.ts);
             self.addPin(item.created_by, item.message.user, item.channel,
@@ -136,7 +136,7 @@ let self = {
     web.pins.list(id, function(err, data) {
       let items = data.items;
       if(items) {
-        items.filter(x => x.created_by != botId && x.type == 'message')
+        items.filter(x => /*x.created_by != botId &&*/ x.type == 'message')
         .forEach(function(item) {
           console.log(' - adding item with ts ', item.message.ts);
           self.addPin(item.created_by, item.message.user, item.channel,
