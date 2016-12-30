@@ -47,6 +47,10 @@ rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
   }
 });
 
+rtm.on(RTM_EVENTS.CHANNEL_JOINED, function handleRtmChannelJoined(data) {
+  db.loadChannelFromSlack(data.channel.id, rtm.activeUserId);
+});
+
 rtm.on(RTM_EVENTS.PIN_ADDED, function handleRtmPinAdded(pin) {
   console.log('Got pin', pin);
   if(pin.user != rtm.activeUserId && pin.item.type == 'message') {
