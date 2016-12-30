@@ -74,7 +74,7 @@ function preprocess(content) {
 
 const TOKEN = '#';
 
-// loop over all the channels and get histories
+
 
 let self = {
   addPin(pinner, pinee, channel, ts, cb) {
@@ -106,6 +106,29 @@ let self = {
                 .value();
     
     cb(null, val);
+  },
+
+  loadFromSlack(botId) {
+    console.log('LOADING FROM SLACK');
+    // get all channel names
+    let channelIds = Object.keys(db.getState())
+    .filter(x => x.substring(0, 1) == TOKEN)
+    .map(x => x.substring(1))
+
+    async.forEach(channelIds, function(id) {
+      console.log('Loading pins for ', ResolveChannel.pure(id));
+      web.pins.list(id, function(err, data) {
+        let items = data.items;
+        if(items) {
+          items.filter(x => x.created_by != botId && x.type == 'message')
+          .forEach(function(item) {
+            console.log(' - adding item with ts ', item.message.ts);
+            self.addPin(item.created_by, item.message.user, item.channel,
+                   item.message.ts, (err, res) => {});
+          });
+        }
+      });
+    });
   },
 
   listPins(data, cb) {

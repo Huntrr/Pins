@@ -20,6 +20,8 @@ function sendMessage(msg, user) {
   });
 }
 
+db.loadFromSlack(rtm.activeUserId);
+
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload if you want to cache it
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
   console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}`);
