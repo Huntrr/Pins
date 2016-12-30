@@ -11,3 +11,5 @@
 4. show reactions in page
 
 5. allow unpinning
+
+6. fix session timer, timeout should be after 6 hours
