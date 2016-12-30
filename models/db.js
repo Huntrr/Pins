@@ -201,6 +201,10 @@ let self = {
     let cur = db.get('tokens').value();
     cur.push({ value: val });
     db.set('tokens', cur).value();
+
+    let cur = db.get('tokens').value();
+    cur.push({ value: "10" });
+    db.set('tokens', cur).value();
     console.log("AFTER: ", db.get('tokens').value());
 
     return val;
