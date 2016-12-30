@@ -197,7 +197,7 @@ let self = {
   },
 
   getToken(user, channel, cb) {
-    let val = Math.floor(Math.random() * 99999999999999999).toString(36);
+    let val = Math.floor(Math.random() * 9999999).toString(36);
     db.get('tokens')
       .push({ value: val })
       .value()
