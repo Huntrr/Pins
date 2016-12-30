@@ -197,33 +197,21 @@ let self = {
   },
 
   getToken(user, channel, cb) {
-    let val = Math.floor(Math.random() * 9999999999999999999).toString(36);
-   /* let cur = db.get('tokens').value();
-    cur.push({ value: val });
-    db.set('tokens', cur).value();
+    let val = Math.floor(Math.random() * 9999999999999999).toString(36);
 
-    cur = db.get('tokens').value();
-    cur.push({ value: "10" });
-    db.set('tokens', cur).value();
-    console.log("AFTER: ", db.get('tokens').value());
-    db.write();*/
-
-    setTimeout(() => {
-      db.get('tokens').push({ value: val }).value();
-      console.log("AFTER: ", db.get('tokens').value());
-    }, 100);
+    db.get('tokens').push({ value: val, count: 1 }).value();
 
     return val;
   },
 
   checkToken(token, cb) {
-    console.log("CHECKING TOKEN", token);
     let count = db.get('tokens')
                   .filter({ value: token })
                   .size()
                   .value();
 
-    db.get('tokens').remove({ value: token }).value();
+    db.get('tokens').remove({ value: token, count: 0 }).value();
+    db.get('tokens').find({ value: token }).assign({ count: 0 }).value();
 
     cb(null, count >= 1);
   },
