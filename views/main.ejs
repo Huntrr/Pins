@@ -7,11 +7,12 @@
 
     <body>
       <h1><%= name %></h1>
+      <h2><%- channelName %></h2>
 
       <div class="messages">
           <% pins.forEach((pin) => { %>
               <div class="pin">
-                  <img src="<%= pin.image %>"/>
+                  <img class="icon" src="<%= pin.image %>"/>
 
                   <div class="message">
                       <div class="username">
@@ -19,25 +20,26 @@
                       </div>
 
                       <div class="time">
-                          <%= dateformat(new Date(pin.ts), 'yyyy-mm-dd hh:MM') %>
+                          <%= dateformat(new Date(parseFloat(pin.ts) * 1000), 'yyyy-mm-dd hh:MM') %>
                       </div>
 
                       <div class="score">
                           <%= pin.score %>
                       </div>
 
-                      <div class="content">
-                          <%= pin.content %>
+                      <div class="permalink">
+                          <a href="https://<%= org %>.slack.com/archives/<%= pin.channelName %>/p<%= pin.ts.replace('.', '') %>">Permalink</a>
                       </div>
 
-                      <div class="permalink">
-                          <a href="https://<%= org %>.slack.com/archives/<% pin.channelName %>/p<%= pin.ts.replace('.', '') %>">Permalink</a>
+                      <div class="content">
+                          <%- pin.content %>
                       </div>
+
                   </div>
               </div>
           <% }) %>
       </div>
 
-      <p>Copyright &copy; <%= year %> Hunter</p>
+      <p>Copyright &copy; <%= year %> <a href="http://hunterlightman.com">Hunter</a></p>
     </body>
 </html>

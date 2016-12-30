@@ -4,17 +4,25 @@ const router = express.Router();
 const db = require('../models/db.js');
 const dateformat = require('dateformat');
 
+const ResolveChannel = require('../utils/channelresolver.js');
+
 let renderList = (req, res) => {
   db.listPins(genParams(req), function(err, pins) {
     if(err) {
       console.error(err);
+      return res.render('error.ejs', {error: err});
     }
-    res.render('main.ejs', { pins, dateformat });
+
+    let channelName = 'All Channels';
+    if(req.params.channel) {
+      channelName = ResolveChannel.formatted(req.params.channel);
+    }
+    res.render('main.ejs', { pins, dateformat, channelName });
   });
 };
 
-router.get('/:channel', renderList);
 router.get('/all', renderList);
+router.get('/:channel', renderList);
 
 router.get('/404', function(req, res) {
   res.render('404.ejs');

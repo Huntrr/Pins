@@ -6,12 +6,16 @@ const low = require('lowdb');
 const WebClient = require('@slack/client').WebClient;
 const web = new WebClient(process.env['SLACK_API_TOKEN']);
 
+const ResolveUser = require('../utils/userresolver.js');
+const ResolveChannel = require('../utils/channelresolver.js');
+const ResolveEmoji = require('../utils/emojiresolver.js');
+
 const db = low('db.json');
 db.defaults({ tokens: [] })
   .value();
 
 function filterChannel(channel, data) {
-  let query = db.get('#' + data.channel);
+  let query = db.get(TOKEN + channel);
   if(data.user) {
     query = query.filter({ pinee: data.user });
   }
@@ -19,16 +23,72 @@ function filterChannel(channel, data) {
   return query.sortBy('ts').value();
 };
 
-let self = {
-  addPin(pinner, pinee, channel, ts, cb) {
-    if(!db.has('#' + channel)) {
-      db.set('#' + channel, []).value();
+// formats channel and user and emojis
+function preprocess(content) {
+  // first process channel names
+  let i = content.indexOf('<#');
+  while(i >= 0) {
+    let j = content.indexOf('|', i);
+    let channelId = content.substring(i + 2, j);
+    j = content.indexOf('>',  j);
+
+    if(ResolveChannel.formatted(channelId)) {
+      content = content.substring(0, i) + ResolveChannel.formatted(channelId) +
+        content.substring(j + 1);
     }
 
+    i = content.indexOf('<#', i + 1);
+  }
+
+  // then process names
+  i = content.indexOf('<@');
+  while(i >= 0) {
+    let j = content.indexOf('>', i);
+    let userId = content.substring(i + 2, j);
+
+    content = content.substring(0, i) + ResolveUser.formatted(userId) +
+      content.substring(j + 1);
+
+    i = content.indexOf('<@', i + 1);
+  }
+
+  // and finally emojis
+  i = content.indexOf(':');
+  while(i >= 0) {
+    let j = content.indexOf(':', i + 1);
+    let emoji = content.substring(i + 1, j);
+
+    let formatted = ResolveEmoji(emoji);
+    if(formatted) {
+      content = content.substring(0, i) + formatted +
+        content.substring(j + 1);
+      i = content.indexOf(':', j + 1);
+    } else {
+      i = j;
+    }
+
+  }
+
+  return content;
+}
+
+const TOKEN = '#';
+
+// loop over all the channels and get histories
+
+let self = {
+  addPin(pinner, pinee, channel, ts, cb) {
+    if(!db.has(TOKEN + channel).value()) {
+      db.set(TOKEN + channel, []).value();
+    }
+
+    console.log('Removing pin from ', channel);
     // rmeove the pin first if it's already there
     self.removePin(pinee, channel, ts, (err, res) => {
       // add the pin
-      let val = db.get('#' + channel)
+      console.log('(Re)adding pin to ', channel);
+      console.log(db.get(TOKEN + channel).value());
+      let val = db.get(TOKEN + channel)
                   .push({channel, pinner, pinee, ts })
                   .value();
 
@@ -37,11 +97,11 @@ let self = {
   },
 
   removePin(pinee, channel, ts, cb) {
-    if(!db.has('#' + channel)) {
-      db.set('#' + channel, []).value();
+    if(!db.has(TOKEN + channel)) {
+      db.set(TOKEN + channel, []).value();
     }
 
-    let val = db.get('#' + channel)
+    let val = db.get(TOKEN + channel)
                 .remove({ pinee, ts })
                 .value();
     
@@ -54,9 +114,13 @@ let self = {
       tsList = filterChannel(data.channel, data);
     } else {
       Object.keys(db.getState())
-      .filter(x => x.substring(0, 1) == '#')
+      .filter(x => x.substring(0, 1) == TOKEN)
       .map(x => x.substring(1))
-      .forEach(key => { filterChannel(key, data).forEach(tsList.push); });
+      .forEach(key => { 
+        filterChannel(key, data).forEach((d) => {
+          tsList.push(d)
+        }); 
+      });
       
       tsList = tsList.sort((x, y) => y - x);
     }
@@ -73,45 +137,40 @@ let self = {
     // need to map each pin to the format
     // { image, author, content, ts, score, channelName }
     async.map(tsList, function(pin, callback) {
-      async.map(['image', 'message', 'channel'], function(type, _callback) {
-        if(type == 'image') {
-          web.users.profile.get({ user: pin.pinee }, _callback);
-        } else if(type == 'message') {
-          web.channels.history(pin.channel, {
-            latest: pin.ts,
-            oldest: pin.ts,
-            inclusive: 1
-          }, _callback);
-        } else if(type == 'channel') {
-          web.channels.info(pin.channel, _callback);
-        } else {
-          _callback('invalid type', type);
-        }
-
+      web.channels.history(pin.channel, {
+        latest: pin.ts,
+        oldest: pin.ts,
+        inclusive: 1
       }, function(err, results) {
         if(err) {
           return cb(err, null);
         }
 
         let result = {};
-        result.image = results[0].profile['image_72'];
-        result.author = results[0].profile['first_name'];
+        result.image = ResolveUser.image(pin.pinee);
+        result.author = ResolveUser.pure(pin.pinee);
 
-        result.channelName = results[2].channel.name;
-        
-        let msg = results[1].messages[0];
+        result.channelName = ResolveChannel.pure(pin.channel);
+
+        let msg = results.messages[0];
         if(msg) {
-          result.content = marked(msg['text']);
+          result.content = (marked(preprocess(msg['text'])));
           result.ts = msg['ts'];
           result.score = 0;
           if(msg.reactions) {
-            msg.reactions.forEach(x => result.score += score['count']);
+            msg.reactions.forEach(x => result.score += x['count']);
           }
         }
 
         callback(err, result);
       });
-    }, cb);
+    }, function(err, list) {
+      if(list) {
+        list = list.sort((x, y) => y.score - x.score);
+      }
+
+      cb(err, list);
+    });
   },
 
   getToken(user, channel, cb) {
@@ -132,6 +191,10 @@ let self = {
     db.get('tokens').remove({ value: token }).value();
 
     cb(null, count >= 1);
+  },
+
+  clearTokens(cb) {
+    cb(null, db.set('tokens', []).value());
   }
 };
 

@@ -9,6 +9,7 @@ const db = require('./models/db');
 const _ = require('lodash');
 
 const bot_token = process.env['SLACK_BOT_TOKEN'] || '';
+const api_token = process.env['SLACK_API_TOKEN'] || '';
 
 const rtm = new RtmClient(bot_token);
 const web = new WebClient(bot_token);
@@ -26,13 +27,15 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
 
 rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
   console.log('Got reaction', reaction);
-  if(reaction.reaction == 'pin') {
+  if(reaction.item.type == 'message' && reaction.reaction == 'pin') {
     db.addPin(reaction.user, reaction.item_user, reaction.item.channel,
               reaction.item.ts, (err) => {
                 if(err) {
                   console.error(err);
                 } else {
                   console.log('Message successfully pinned');
+                  web.pins.add(reaction.item.channel,
+                               {timestamp: reaction.item.ts});
                   sendMessage(`Pin'd! See all the pins in ` +
                                   `<#${reaction.item.channel}> over at ` +
                                   getPinUrl(reaction.user, reaction.item.channel),
@@ -44,18 +47,20 @@ rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
 
 rtm.on(RTM_EVENTS.PIN_ADDED, function handleRtmPinAdded(pin) {
   console.log('Got pin', pin);
+  if(pin.user != rtm.activeUserId && pin.item.type == 'message') {
     db.addPin(pin.user, pin.item_user, pin.item.channel,
-              reaction.item.message.ts, (err) => {
+              pin.item.message.ts, (err) => {
                 if(err) {
                   console.error(err);
                 } else {
                   console.log('Message successfully pinned');
                   sendMessage(`Pin'd! See all the pins in ` +
-                                  `<#${message.channel}> over at ` +
-                                  getPinUrl(pin.user, pin.item.channel),
-                                  pin.user);
+                              `<#${pin.channel}> over at ` +
+                              getPinUrl(pin.user, pin.item.channel),
+                  pin.user);
                 }
               });
+  }
 });
 
 rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {

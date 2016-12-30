@@ -5,6 +5,10 @@ const bodyParser = require('body-parser');
 const expressSession = require('express-session');
 const db = require('./models/db.js');
 
+db.clearTokens((err, res) => {
+  if(err) console.error(err);
+});
+
 /**
  * constants
  */
@@ -72,6 +76,7 @@ app.use(function(req, res, next) {
       req.session.verified = false;
       res.render('404.ejs');
     } else {
+      req.session.vts = Date.now(); // update timestamp and continue session
       next();
     }
   } else {
