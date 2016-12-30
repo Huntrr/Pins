@@ -13,3 +13,9 @@
 5. allow unpinning
 
 6. fix session timer, timeout should be after 6 hours
+
+7. sort by date and other things
+
+8. better filtering
+
+9. pagination w/ infinite scroll
