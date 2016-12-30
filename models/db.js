@@ -208,8 +208,10 @@ let self = {
     console.log("AFTER: ", db.get('tokens').value());
     db.write();*/
 
-    db.get('tokens').push({ value: val }).value();
-    console.log("AFTER: ", db.get('tokens').value());
+    setTimeout(() => {
+      db.get('tokens').push({ value: val }).value();
+      console.log("AFTER: ", db.get('tokens').value());
+    }, 100);
 
     return val;
   },
