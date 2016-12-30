@@ -198,9 +198,8 @@ let self = {
 
   getToken(user, channel, cb) {
     let val = Math.floor(Math.random() * 9999999999999999999).toString(36);
-
-    console.log("BEFORE: ", db.get('tokens').value());
-    console.log("AFTER: ", db.get('tokens').push({ value: val }).value());
+    db.set('tokens', db.get('tokens').value().push({ value: val })).value();
+    console.log("AFTER: ", db.get('tokens').value();
 
     return val;
   },
