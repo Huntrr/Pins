@@ -198,7 +198,7 @@ let self = {
 
   getToken(user, channel, cb) {
     let val = Math.floor(Math.random() * 9999999999999999999).toString(36);
-    let cur = db.get('tokens').value();
+   /* let cur = db.get('tokens').value();
     cur.push({ value: val });
     db.set('tokens', cur).value();
 
@@ -206,12 +206,16 @@ let self = {
     cur.push({ value: "10" });
     db.set('tokens', cur).value();
     console.log("AFTER: ", db.get('tokens').value());
-    db.write();
+    db.write();*/
+
+    db.get('tokens').push({ value: val }).value();
+    console.log("AFTER: ", db.get('tokens').value());
 
     return val;
   },
 
   checkToken(token, cb) {
+    console.log("CHECKING TOKEN", token);
     let count = db.get('tokens')
                   .filter({ value: token })
                   .size()
